@@ -34,7 +34,7 @@ impl Terminal {
         let y = y.saturating_add(1);
         print!("{}", termion::cursor::Goto(x, y));
     }
-    pub fn flush() -> Result<(), std: io::Error> {
+    pub fn flush() -> Result<(), std::io::Error> {
         io::stdout().flush()
     }
     pub fn read_key() -> Result<Key, std::io::Error> {
@@ -43,5 +43,11 @@ impl Terminal {
                 return key;
             }
         }
+    }
+    pub fn cursor_hide() {
+        print!("{}", termion::cursor::Hide);
+    }
+    pub fn cursor_show() {
+        print!("{}", termion::cursor::Show);
     }
 }
