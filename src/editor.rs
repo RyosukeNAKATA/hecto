@@ -2,9 +2,12 @@ use crate::Document;
 use crate::Row;
 use crate::Terminal;
 use std::env;
+<<<<<<< HEAD
 use std::time::Duration;
 use std::time::Instant;
 use termion::color;
+=======
+>>>>>>> c2cfd011fe97ef6d02be0be9d25620f748c1dd93
 use termion::event::Key;
 
 const STATUS_FG_COLOR: color::Rgb = color::Rgb(63, 63, 63);
@@ -53,6 +56,7 @@ impl Editor {
         }
     }
     pub fn default() -> Self {
+<<<<<<< HEAD
         let args: Vec<String> = env::args().collect();
         let mut initial_status = String::from("HELP: CtrlD = quit");
         let document = if args.len() > 1 {
@@ -64,6 +68,12 @@ impl Editor {
                 initial_status = format!("ERR: Could not open file: {}", file_name);
                 Document::default()
             }
+=======
+        let args : Vec<String> = env::args().collect();
+        let document = if args.len() > 1 {
+            let file_name = &args[1];
+            Document::open(&file_name).unwrap_or_default()
+>>>>>>> c2cfd011fe97ef6d02be0be9d25620f748c1dd93
         } else {
             Document::default()
         };
