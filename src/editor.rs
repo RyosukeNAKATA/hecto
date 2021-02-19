@@ -6,7 +6,6 @@ use std::time::Duration;
 use std::time::Instant;
 use termion::color;
 use termion::event::Key;
-use test::TestType::DocTest;
 
 const STATUS_FG_COLOR: color::Rgb = color::Rgb(63, 63, 63);
 const STATUS_BG_COLOR: color::Rgb = color::Rgb(239, 239, 239);
@@ -57,7 +56,7 @@ impl Editor {
     }
     pub fn default() -> Self {
         let args: Vec<String> = env::args().collect();
-        let mut initial_status = String::from("HELP: Ctrl-s to save | Ctrl-q to quit");
+        let mut initial_status = String::from("HELP: Ctrl-s to save | Ctrl-d to quit");
         let document = if let Some(file_name) = args.get(1) {
             let doc = Document::open(file_name);
             if let Ok(doc) = doc {
@@ -119,11 +118,12 @@ impl Editor {
     fn process_keypress(&mut self) -> Result<(), std::io::Error> {
         let pressed_key = Terminal::read_key()?;
         match pressed_key {
-            Key::Ctrl('q') => {
+            Key::Ctrl('d') => {
                 if self.quit_times > 0 && self.document.is_dirty() {
-                    self.status_message = StatusMessage::from(format!("WARNING! File had usaved changes. Press Ctrl-Q {} more times to quit.",,
-                    self.quit_times
-                    ));;
+                    self.status_message = StatusMessage::from(format!(
+                        "WARNING! File had usaved changes. Press Ctrl-D {} more times to quit.",
+                        self.quit_times
+                    ));
                     self.quit_times -= 1;
                     return Ok(());
                 }
@@ -262,7 +262,10 @@ impl Editor {
         let height = self.terminal.size().height;
         for terminal_row in 0..height {
             Terminal::clear_current_line();
-            if let Some(row) = self.document.row(self.offset.y.saturating_add(terminal_row as usize)) {
+            if let Some(row) = self
+                .document
+                .row(self.offset.y.saturating_add(terminal_row as usize))
+            {
                 self.draw_row(row);
             } else if self.document.is_empty() && terminal_row == height / 3 {
                 self.draw_welcome_message();
@@ -274,7 +277,7 @@ impl Editor {
     fn draw_status_bar(&self) {
         let mut status;
         let width = self.terminal.size().width as usize;
-        let modified_indicator = if self.document.is_dirty(){
+        let modified_indicator = if self.document.is_dirty() {
             "(modified)"
         } else {
             ""
@@ -294,7 +297,10 @@ impl Editor {
         #[allow(clippy::integer_arithmetic)]
         let len = status.len() + line_indicator.len();
         status.push_str(&" ".repeat(width.saturating_sub(len)));
-        status = format!("{} - {} lines{}", status, line_indicator, modified_indicator);
+        status = format!(
+            "{} - {} lines{}",
+            status, line_indicator, modified_indicator
+        );
         status.truncate(width);
         Terminal::set_bg_color(STATUS_BG_COLOR);
         Terminal::set_fg_color(STATUS_FG_COLOR);

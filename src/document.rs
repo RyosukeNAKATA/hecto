@@ -2,13 +2,12 @@ use crate::Position;
 use crate::Row;
 use std::fs;
 use std::io::{Error, Write};
-use core::slice::index::slice_end_index_len_fail;
 
 #[derive(Default)]
 pub struct Document {
     rows: Vec<Row>,
     pub file_name: Option<String>,
-    dirty:bool,
+    dirty: bool,
 }
 
 impl Document {
@@ -47,7 +46,7 @@ impl Document {
         self.rows.insert(at.y + 1, new_row);
     }
     pub fn insert(&mut self, at: &Position, c: char) {
-        if at.y > self.rows.len(){
+        if at.y > self.rows.len() {
             return;
         }
         self.dirty = true;
@@ -72,7 +71,7 @@ impl Document {
             return;
         }
         self.dirty = true;
-        if at.x == self.rows[at.y].len() && at.y + 1 < len{
+        if at.x == self.rows[at.y].len() && at.y + 1 < len {
             let new_row = self.rows.remove(at.y + 1);
             let row = &mut self.rows[at.y];
             row.append(&new_row);
@@ -92,7 +91,7 @@ impl Document {
         }
         Ok(())
     }
-    pub fn is_dirty(&self) -> bool{
+    pub fn is_dirty(&self) -> bool {
         self.dirty
     }
 }

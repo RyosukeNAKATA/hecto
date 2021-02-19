@@ -1,6 +1,5 @@
 use std::cmp;
 use unicode_segmentation::UnicodeSegmentation;
-use std::panic::resume_unwind;
 
 #[derive(Default)]
 pub struct Row {
@@ -50,8 +49,8 @@ impl Row {
         }
         let mut result: String = String::new();
         let mut length = 0;
-        for (index, grapheme) in self.string[..].graphemes(true).enumerate(){
-            length+=1;
+        for (index, grapheme) in self.string[..].graphemes(true).enumerate() {
+            length += 1;
             if index == at {
                 length += 1;
                 result.push(c);
@@ -67,11 +66,11 @@ impl Row {
         }
         let mut result: String = String::new();
         let mut length = 0;
-        for (index, grapheme) in self.string[..].graphemes(true).enumerate(){
-            length+=1;
+        for (index, grapheme) in self.string[..].graphemes(true).enumerate() {
+            length += 1;
             if index == at {
                 length += 1;
-                result.push(c);
+                result.push_str(grapheme);
             }
             result.push_str(grapheme);
         }
@@ -87,7 +86,7 @@ impl Row {
         let mut length = 0;
         let mut splitted_row: String = String::new();
         let mut splitted_length = 0;
-        for (index, grapheme) in self.string[..].graphemes(true).enumerate(){
+        for (index, grapheme) in self.string[..].graphemes(true).enumerate() {
             if index < at {
                 length += 1;
                 row.push_str(grapheme);
@@ -101,7 +100,7 @@ impl Row {
         self.len = length;
         Self {
             string: splitted_row,
-            len: splitted_length
+            len: splitted_length,
         }
     }
     pub fn as_bytes(&self) -> &[u8] {
