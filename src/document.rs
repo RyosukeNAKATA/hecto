@@ -1,5 +1,6 @@
 use crate::Position;
 use crate::Row;
+
 use std::fs;
 use std::io::{Error, Write};
 
@@ -14,11 +15,13 @@ impl Document {
     pub fn open(filename: &str) -> Result<Self, std::io::Error> {
         let contents = fs::read_to_string(filename)?;
         let mut rows = Vec::new();
+
         for value in contents.lines() {
             rows.push(Row::from(value));
         }
         Ok(Self {
             rows,
+
             file_name: Some(filename.to_string()),
             dirty: false,
         })
@@ -54,10 +57,11 @@ impl Document {
             self.insert_newline(at);
             return;
         }
-        if at.y == self.len() {
+        if at.y == self.rows.len() {
             let mut row = Row::default();
+
             row.insert(0, c);
-            self.rows.push(row)
+            self.rows.push(row);
         } else {
             #[allow(clippy::indexing_slicing)]
             let row = &mut self.rows[at.y];
@@ -72,12 +76,13 @@ impl Document {
         }
         self.dirty = true;
         if at.x == self.rows[at.y].len() && at.y + 1 < len {
-            let new_row = self.rows.remove(at.y + 1);
+            let next_row = self.rows.remove(at.y + 1);
             let row = &mut self.rows[at.y];
-            row.append(&new_row);
+
+            row.append(&next_row);
         } else {
             let row = &mut self.rows[at.y];
-            row.delete(at.y);
+            row.delete(at.x);
         }
     }
     pub fn save(&mut self) -> Result<(), Error> {
@@ -94,7 +99,8 @@ impl Document {
     pub fn is_dirty(&self) -> bool {
         self.dirty
     }
-    pub fn find(self, query: &str) -> Option<Position> {
+
+    pub fn find(&self, query: &str) -> Option<Position> {
         for (y, row) in self.rows.iter().enumerate() {
             if let Some(x) = row.find(query) {
                 return Some(Position { x, y });
