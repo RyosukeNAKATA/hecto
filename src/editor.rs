@@ -12,7 +12,7 @@ const STATUS_BG_COLOR: color::Rgb = color::Rgb(239, 239, 239);
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const QUIT_TIMES: u8 = 3;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -20,6 +20,7 @@ pub struct Position {
 
 struct StatusMessage {
     text: String,
+
     time: Instant,
 }
 impl StatusMessage {
@@ -30,12 +31,14 @@ impl StatusMessage {
         }
     }
 }
+
 pub struct Editor {
     should_quit: bool,
     terminal: Terminal,
     cursor_position: Position,
     offset: Position,
     document: Document,
+
     status_message: StatusMessage,
     quit_times: u8,
 }
@@ -57,7 +60,8 @@ impl Editor {
     pub fn default() -> Self {
         let args: Vec<String> = env::args().collect();
         let mut initial_status =
-            String::from("HELP: Ctrl-f to find | Ctrl-s to save | Ctrl-d to quit");
+            String::from("HELP: Ctrl-F = find | Ctrl-S = save | Ctrl-Q = quit");
+
         let document = if let Some(file_name) = args.get(1) {
             let doc = Document::open(file_name);
             if let Ok(doc) = doc {
@@ -93,16 +97,17 @@ impl Editor {
             self.draw_message_bar();
             Terminal::cursor_position(&Position {
                 x: self.cursor_position.x.saturating_sub(self.offset.x),
+
                 y: self.cursor_position.y.saturating_sub(self.offset.y),
             });
         }
         Terminal::cursor_show();
         Terminal::flush()
     }
-
     fn save(&mut self) {
         if self.document.file_name.is_none() {
             let new_name = self.prompt("Save as: ", |_, _, _| {}).unwrap_or(None);
+
             if new_name.is_none() {
                 self.status_message = StatusMessage::from("Save aborted.".to_string());
                 return;
@@ -116,38 +121,44 @@ impl Editor {
             self.status_message = StatusMessage::from("Error writing file!".to_string());
         }
     }
+    fn search(&mut self) {
+        let old_position = self.cursor_position.clone();
+        if let Some(query) = self
+            .prompt("Search: ", |editor, _, query| {
+                if let Some(position) = editor.document.find(&query) {
+                    editor.cursor_position = position;
+                    editor.scroll();
+                }
+            })
+            .unwrap_or(None)
+        {
+            if let Some(position) = self.document.find(&query[..]) {
+                self.cursor_position = position;
+            } else {
+                self.status_message = StatusMessage::from(format!("Not found :{}.", query));
+            }
+        } else {
+            self.cursor_position = old_position;
+            self.scroll();
+        }
+    }
     fn process_keypress(&mut self) -> Result<(), std::io::Error> {
         let pressed_key = Terminal::read_key()?;
         match pressed_key {
-            Key::Ctrl('d') => {
+            Key::Ctrl('q') => {
                 if self.quit_times > 0 && self.document.is_dirty() {
                     self.status_message = StatusMessage::from(format!(
-                        "WARNING! File had usaved changes. Press Ctrl-D {} more times to quit.",
+                        "WARNING! File has unsaved changes. Press Ctrl-Q {} more times to quit.",
                         self.quit_times
                     ));
+
                     self.quit_times -= 1;
                     return Ok(());
                 }
                 self.should_quit = true
             }
             Key::Ctrl('s') => self.save(),
-            Key::Ctrl('f') => {
-                if let Some(query) = self
-                    .prompt("Search: ", |editor, _, query| {
-                        if let Some(position) = editor.document.find(&query) {
-                            editor.cursor_position = position;
-                            editor.scroll();
-                        }
-                    })
-                    .unwrap_or(None)
-                {
-                    if let Some(position) = self.document.find(&query[..]) {
-                        self.cursor_position = position;
-                    } else {
-                        self.status_message = StatusMessage::from(format!("Not found :{}", query));
-                    }
-                }
-            }
+            Key::Ctrl('f') => self.search(),
             Key::Char(c) => {
                 self.document.insert(&self.cursor_position, c);
                 self.move_cursor(Key::Right);
@@ -187,16 +198,16 @@ impl Editor {
             offset.y = y.saturating_sub(height).saturating_add(1);
         }
         if x < offset.x {
-            offset.y = y;
+            offset.x = x;
         } else if x >= offset.x.saturating_add(width) {
             offset.x = x.saturating_sub(width).saturating_add(1);
         }
     }
     fn move_cursor(&mut self, key: Key) {
         let terminal_height = self.terminal.size().height as usize;
-        let Position { mut x, mut y } = self.cursor_position;
+        let Position { mut y, mut x } = self.cursor_position;
         let height = self.document.len();
-        let width = if let Some(row) = self.document.row(y) {
+        let mut width = if let Some(row) = self.document.row(y) {
             row.len()
         } else {
             0
@@ -213,8 +224,9 @@ impl Editor {
                     x -= 1;
                 } else if y > 0 {
                     y -= 1;
+
                     if let Some(row) = self.document.row(y) {
-                        x = row.len()
+                        x = row.len();
                     } else {
                         x = 0;
                     }
@@ -246,7 +258,7 @@ impl Editor {
             Key::End => x = width,
             _ => (),
         }
-        let width = if let Some(row) = self.document.row(y) {
+        width = if let Some(row) = self.document.row(y) {
             row.len()
         } else {
             0
@@ -275,9 +287,10 @@ impl Editor {
         let row = row.render(start, end);
         println!("{}\r", row)
     }
-    #[allow(clippy::integer_arithmetic, clippy::integer_division)]
+    #[allow(clippy::integer_division, clippy::integer_arithmetic)]
     fn draw_rows(&self) {
         let height = self.terminal.size().height;
+
         for terminal_row in 0..height {
             Terminal::clear_current_line();
             if let Some(row) = self
@@ -296,7 +309,7 @@ impl Editor {
         let mut status;
         let width = self.terminal.size().width as usize;
         let modified_indicator = if self.document.is_dirty() {
-            "(modified)"
+            " (modified)"
         } else {
             ""
         };
@@ -306,7 +319,13 @@ impl Editor {
             file_name = name.clone();
             file_name.truncate(20);
         }
-        status = format!("{} - {} lines", file_name, self.document.len());
+        status = format!(
+            "{} - {} lines{}",
+            file_name,
+            self.document.len(),
+            modified_indicator
+        );
+
         let line_indicator = format!(
             "{}/{}",
             self.cursor_position.y.saturating_add(1),
@@ -315,10 +334,7 @@ impl Editor {
         #[allow(clippy::integer_arithmetic)]
         let len = status.len() + line_indicator.len();
         status.push_str(&" ".repeat(width.saturating_sub(len)));
-        status = format!(
-            "{} - {} lines{}",
-            status, line_indicator, modified_indicator
-        );
+        status = format!("{}{}", status, line_indicator);
         status.truncate(width);
         Terminal::set_bg_color(STATUS_BG_COLOR);
         Terminal::set_fg_color(STATUS_FG_COLOR);
@@ -326,6 +342,7 @@ impl Editor {
         Terminal::reset_fg_color();
         Terminal::reset_bg_color();
     }
+
     fn draw_message_bar(&self) {
         Terminal::clear_current_line();
         let message = &self.status_message;
@@ -347,6 +364,7 @@ impl Editor {
             match key {
                 Key::Backspace => result.truncate(result.len().saturating_sub(1)),
                 Key::Char('\n') => break,
+
                 Key::Char(c) => {
                     if !c.is_control() {
                         result.push(c);
@@ -354,6 +372,7 @@ impl Editor {
                 }
                 Key::Esc => {
                     result.truncate(0);
+
                     break;
                 }
                 _ => (),

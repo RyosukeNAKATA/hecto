@@ -67,12 +67,10 @@ impl Row {
         let mut result: String = String::new();
         let mut length = 0;
         for (index, grapheme) in self.string[..].graphemes(true).enumerate() {
-            length += 1;
-            if index == at {
+            if index != at {
                 length += 1;
                 result.push_str(grapheme);
             }
-            result.push_str(grapheme);
         }
         self.len = length;
         self.string = result;
