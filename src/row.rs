@@ -1,3 +1,4 @@
+use crate::highlighting;
 use crate::SearchDirection;
 use std::cmp;
 use termion::color;
@@ -6,6 +7,7 @@ use unicode_segmentation::UnicodeSegmentation;
 #[derive(Default)]
 pub struct Row {
     string: String,
+    highlighting: Vec<highlighting::Tyoe>,
     len: usize,
 }
 
@@ -13,6 +15,7 @@ impl From<&str> for Row {
     fn from(slice: &str) -> Self {
         Self {
             string: String::from(slice),
+            highlighting: Vec::new(),
             len: slice.graphemes(true).count(),
         }
     }
@@ -24,26 +27,27 @@ impl Row {
         let start = cmp::min(start, end);
         let mut result = String::new();
         #[allow(clippy::integer_arithmetic)]
-        for grapheme in self.string[..]
+        for (index, grapheme) in self.string[..]
             .graphemes(true)
+            .enumerate()
             .skip(start)
             .take(end - start)
         {
             if let Some(c) = grapheme.chars().next() {
+                let highlighting_type = self
+                    .highlighting
+                    .get(index)
+                    .unwrap_or(&highlighting::Type::None);
+                let start_highlight =
+                    format!("{}", termion::color::Fg(highlighting_type.to_color()));
+                result.push_str(&start_highlight[..]);
                 if c == '\t' {
                     result.push_str(" ");
-                } else if c.is_ascii_digit() {
-                    result.push_str(
-                        &format!(
-                            "{}{}{}",
-                            termion::color::Fg(color::Rgb(220, 163, 163)),
-                            c,
-                            color::Fg(color::Reset)
-                        )[..],
-                    );
                 } else {
                     result.push(c);
                 }
+                let end_highlight = format!("{}", termion::color::Fg(color::Reset));
+                result.push_str(&end_highlight[..]);
             }
         }
         result
@@ -111,6 +115,7 @@ impl Row {
         self.len = length;
         Self {
             string: splitted_row,
+            highlighting: Vec::new(),
             len: splitted_length,
         }
     }
@@ -153,5 +158,16 @@ impl Row {
             }
         }
         None
+    }
+    pub fn highlighting(&mut self) {
+        let mut highlighting = Vec::new();
+        for c in self.string.chars() {
+            if c.is_ascii_digit() {
+                highlighting.push(highlighting::Tyoe::Number);
+            } else {
+                highlighting.push(highlighting::Tyoe::None);
+            }
+        }
+        self.highlighting = highlighting;
     }
 }

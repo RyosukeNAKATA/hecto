@@ -17,7 +17,9 @@ impl Document {
         let mut rows = Vec::new();
 
         for value in contents.lines() {
-            rows.push(Row::from(value));
+            let mut row::from(value);
+            row.highlight();
+            rows.push(row);
         }
         Ok(Self {
             rows,
@@ -44,7 +46,9 @@ impl Document {
             return;
         }
         #[allow(clippy::indexing_slicing)]
-        let new_row = self.rows[at.y].split(at.x);
+        let current_row = &mut self.rows[at.y];
+        let mut new_row = current_row.split(at.x);
+        new_row.highlight();
         #[allow(clippy::integer_arithmetic)]
         self.rows.insert(at.y + 1, new_row);
     }
@@ -59,13 +63,14 @@ impl Document {
         }
         if at.y == self.rows.len() {
             let mut row = Row::default();
-
             row.insert(0, c);
+            row.highlight();
             self.rows.push(row);
         } else {
             #[allow(clippy::indexing_slicing)]
             let row = &mut self.rows[at.y];
             row.insert(at.x, c);
+            row.highlight();
         }
     }
     #[allow(clippy::integer_arithmetic, clippy::indexing_slicing)]
@@ -78,11 +83,12 @@ impl Document {
         if at.x == self.rows[at.y].len() && at.y + 1 < len {
             let next_row = self.rows.remove(at.y + 1);
             let row = &mut self.rows[at.y];
-
             row.append(&next_row);
+            row.highlight();
         } else {
             let row = &mut self.rows[at.y];
             row.delete(at.x);
+            row.highlight();
         }
     }
     pub fn save(&mut self) -> Result<(), Error> {
