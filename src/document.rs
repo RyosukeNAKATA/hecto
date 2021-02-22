@@ -17,7 +17,7 @@ impl Document {
         let mut rows = Vec::new();
 
         for value in contents.lines() {
-            let mut row::from(value);
+            let mut row = Row::from(value);
             row.highlight();
             rows.push(row);
         }

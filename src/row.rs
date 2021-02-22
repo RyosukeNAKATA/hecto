@@ -7,7 +7,7 @@ use unicode_segmentation::UnicodeSegmentation;
 #[derive(Default)]
 pub struct Row {
     string: String,
-    highlighting: Vec<highlighting::Tyoe>,
+    highlighting: Vec<highlighting::Type>,
     len: usize,
 }
 
@@ -159,13 +159,13 @@ impl Row {
         }
         None
     }
-    pub fn highlighting(&mut self) {
+    pub fn highlight(&mut self) {
         let mut highlighting = Vec::new();
         for c in self.string.chars() {
             if c.is_ascii_digit() {
-                highlighting.push(highlighting::Tyoe::Number);
+                highlighting.push(highlighting::Type::Number);
             } else {
-                highlighting.push(highlighting::Tyoe::None);
+                highlighting.push(highlighting::Type::None);
             }
         }
         self.highlighting = highlighting;
