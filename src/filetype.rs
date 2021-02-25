@@ -48,5 +48,7 @@ impl HighlightOptions {
     pub fn strings(self) -> bool {
         self.strings
     }
-    pub fn characters(self) -> bool{self.characters}
+    pub fn characters(self) -> bool {
+        self.characters
+    }
 }
