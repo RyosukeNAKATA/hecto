@@ -26,7 +26,6 @@ pub struct Position {
 
 struct StatusMessage {
     text: String,
-
     time: Instant,
 }
 impl StatusMessage {
@@ -44,7 +43,6 @@ pub struct Editor {
     cursor_position: Position,
     offset: Position,
     document: Document,
-
     status_message: StatusMessage,
     quit_times: u8,
 }
@@ -103,7 +101,6 @@ impl Editor {
             self.draw_message_bar();
             Terminal::cursor_position(&Position {
                 x: self.cursor_position.x.saturating_sub(self.offset.x),
-
                 y: self.cursor_position.y.saturating_sub(self.offset.y),
             });
         }
@@ -113,7 +110,6 @@ impl Editor {
     fn save(&mut self) {
         if self.document.file_name.is_none() {
             let new_name = self.prompt("Save as: ", |_, _, _| {}).unwrap_or(None);
-
             if new_name.is_none() {
                 self.status_message = StatusMessage::from("Save aborted.".to_string());
                 return;
@@ -171,10 +167,9 @@ impl Editor {
             Key::Ctrl('d') => {
                 if self.quit_times > 0 && self.document.is_dirty() {
                     self.status_message = StatusMessage::from(format!(
-                        "WARNING! File has unsaved changes. Press Ctrl-Q {} more times to quit.",
+                        "WARNING! File has unsaved changes. Press Ctrl-D {} more times to quit.",
                         self.quit_times
-                    ));
-
+                    ));;
                     self.quit_times -= 1;
                     return Ok(());
                 }
@@ -247,7 +242,6 @@ impl Editor {
                     x -= 1;
                 } else if y > 0 {
                     y -= 1;
-
                     if let Some(row) = self.document.row(y) {
                         x = row.len();
                     } else {
@@ -313,7 +307,6 @@ impl Editor {
     #[allow(clippy::integer_division, clippy::integer_arithmetic)]
     fn draw_rows(&self) {
         let height = self.terminal.size().height;
-
         for terminal_row in 0..height {
             Terminal::clear_current_line();
             if let Some(row) = self
@@ -364,9 +357,8 @@ impl Editor {
         Terminal::set_fg_color(STATUS_FG_COLOR);
         println!("{}\r", status);
         Terminal::reset_fg_color();
-        Terminal::reset_bg_color();
+        Terminal::reset_bg_color();;
     }
-
     fn draw_message_bar(&self) {
         Terminal::clear_current_line();
         let message = &self.status_message;
@@ -388,7 +380,6 @@ impl Editor {
             match key {
                 Key::Backspace => result.truncate(result.len().saturating_sub(1)),
                 Key::Char('\n') => break,
-
                 Key::Char(c) => {
                     if !c.is_control() {
                         result.push(c);
@@ -396,7 +387,6 @@ impl Editor {
                 }
                 Key::Esc => {
                     result.truncate(0);
-
                     break;
                 }
                 _ => (),

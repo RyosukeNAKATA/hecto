@@ -18,7 +18,6 @@ impl Document {
         let contents = fs::read_to_string(filename)?;
         let file_type = FileType::from(filename);
         let mut rows = Vec::new();
-
         for value in contents.lines() {
             let mut row = Row::from(value);
             row.highlight(file_type.highlighting_options(), None);
@@ -26,7 +25,6 @@ impl Document {
         }
         Ok(Self {
             rows,
-
             file_name: Some(filename.to_string()),
             dirty: false,
             file_type,
