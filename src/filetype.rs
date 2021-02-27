@@ -127,7 +127,7 @@ impl HighlightingOptions {
     pub fn comments(&self) -> bool {
         self.comments
     }
-    pub fn primary_ketwords(&self) -> &Vec<String> {
+    pub fn primary_keywords(&self) -> &Vec<String> {
         &self.primary_ketwords
     }
     pub fn secondary_keywords(&self) -> &Vec<String> {
