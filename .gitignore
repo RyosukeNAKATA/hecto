@@ -16,3 +16,4 @@ Cargo.lock
 /.idea
 test.txt
 test.rs
+.DS_Store
